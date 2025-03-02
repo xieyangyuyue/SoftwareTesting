@@ -1,4 +1,4 @@
-package com.ctgu.api;
+package com.ctgu.api.testcases;
 
 public class TriangleChecker {
     // 解析并验证输入参数
@@ -24,7 +24,7 @@ public class TriangleChecker {
 
     // 判断是否为三角形
     public static boolean isTriangle(int a, int b, int c) {
-        return a + b > c && a + c > b && b + c > a;
+        return  a + b > c && a + c > b && b + c > a;
     }
 
     // 判断三角形类型

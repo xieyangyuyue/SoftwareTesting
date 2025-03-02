@@ -1,19 +1,17 @@
-package com.ctgu.api.tools;
+package com.ctgu.api.growthparameter;
 
-import static com.ctgu.api.tools.GeneralBoundary.generateGeneralBoundaryData;
-import static com.ctgu.api.tools.RobustBoundary.generateRobustBoundaryData;
-import static com.ctgu.api.tools.WorstCaseGeneral.generateWorstCaseGeneralData;
-import static com.ctgu.api.tools.WorstCaseRobust.generateWorstCaseRobustData;
-import static com.ctgu.api.tools.WorstCaseRobustType.generateWorstCaseRobustTypeData;
+import static com.ctgu.api.conditionaljudgment.GeneralBoundary.generateGeneralBoundaryData;
+import static com.ctgu.api.conditionaljudgment.RobustBoundary.generateRobustBoundaryData;
+import static com.ctgu.api.conditionaljudgment.WorstCaseGeneral.generateWorstCaseGeneralData;
+import static com.ctgu.api.conditionaljudgment.WorstCaseRobust.generateWorstCaseRobustData;
+import static com.ctgu.api.conditionaljudgment.WorstCaseRobustType.generateWorstCaseRobustTypeData;
 
 public class TestDataGenerator {
-
     public static void main(String[] args) {
         generateGeneralBoundaryData();
         generateRobustBoundaryData();
         generateWorstCaseGeneralData();
         generateWorstCaseRobustData();
         generateWorstCaseRobustTypeData();
-
     }
 }

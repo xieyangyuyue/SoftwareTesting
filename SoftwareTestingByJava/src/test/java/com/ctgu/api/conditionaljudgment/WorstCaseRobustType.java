@@ -1,10 +1,10 @@
-package com.ctgu.api.tools;
+package com.ctgu.api.conditionaljudgment;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.ctgu.api.tools.ParameterClassification.determineTriangleType;
-import static com.ctgu.api.tools.WriteToFile.writeToFile;
+import static com.ctgu.api.conditionaljudgment.ParameterClassification.determineTriangleType;
+import static com.ctgu.api.growthparameter.WriteToFile.writeToFile;
 
 public class WorstCaseRobustType {
     public static void generateWorstCaseRobustTypeData() {

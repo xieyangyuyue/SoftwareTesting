@@ -1,4 +1,4 @@
-package com.ctgu.api.tools;
+package com.ctgu.api.conditionaljudgment;
 //参数分类
 public class ParameterClassification {
 

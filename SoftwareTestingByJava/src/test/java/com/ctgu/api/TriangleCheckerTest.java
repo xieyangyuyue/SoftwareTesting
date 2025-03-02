@@ -1,8 +1,10 @@
 package com.ctgu.api;
 
+import com.ctgu.api.testcases.TriangleChecker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -16,7 +18,8 @@ public class TriangleCheckerTest {
     // 参数不足时抛出异常
     @ParameterizedTest
     @DisplayName("参数不足时抛出异常")
-    @ValueSource(strings = {"1", "1,2", "1,2,3,4"})
+//    @ValueSource(strings = {"1", "1,2", "1,2,3,4"})
+    @CsvFileSource(resources = "/InsufficientParameters.csv")
     public void testParseAndValidate_InsufficientParameters(String input) {
         String[] args = input.split(",");
         IllegalArgumentException exception = assertThrows(
@@ -27,6 +30,7 @@ public class TriangleCheckerTest {
         logger.info("InsufficientParameters: {} Catch exception: {}", args, exception.getMessage());
         assertEquals("参数不足", exception.getMessage());
     }
+
 
     // 非整数参数时抛出异常
     @ParameterizedTest
@@ -97,7 +101,7 @@ public class TriangleCheckerTest {
             "7, 24, 25"
     })
     public void testIsTriangle_ValidTriangle(int a, int b, int c) {
-        logger.info("ValidTriangle: {}testIsTriangle_ValidTriangle: {}",new int[]{a, b, c}, TriangleChecker.isTriangle(a, b, c));
+        logger.info("ValidTriangle: {}testIsTriangle_ValidTriangle: {}", new int[]{a, b, c}, TriangleChecker.isTriangle(a, b, c));
         assertTrue(TriangleChecker.isTriangle(a, b, c));
     }
 
@@ -106,7 +110,7 @@ public class TriangleCheckerTest {
     @DisplayName("等边三角形判断")
     @ValueSource(ints = {3, 5, 7})
     public void testDetermineTriangleType_Equilateral(int side) {
-        logger.info("Equilateral: {}testDetermineTriangleType_Equilateral: {}",new int[]{side,side,side}, TriangleChecker.determineTriangleType(side, side, side));
+        logger.info("Equilateral: {}testDetermineTriangleType_Equilateral: {}", new int[]{side, side, side}, TriangleChecker.determineTriangleType(side, side, side));
         assertEquals("等边三角形", TriangleChecker.determineTriangleType(side, side, side));
     }
 
@@ -118,11 +122,11 @@ public class TriangleCheckerTest {
             "7, 7, 10"
     })
     public void testDetermineTriangleType_Isosceles(int a, int b, int c) {
-        logger.info("Isosceles: {} testDetermineTriangleType_Isosceles: {}",new int[]{a, b, c},TriangleChecker.determineTriangleType(a, b, c));
+        logger.info("Isosceles: {} testDetermineTriangleType_Isosceles: {}", new int[]{a, b, c}, TriangleChecker.determineTriangleType(a, b, c));
         assertEquals("等腰三角形", TriangleChecker.determineTriangleType(a, b, c));
     }
 
-    // Test for scalene triangle
+
     @ParameterizedTest
     @DisplayName("一般三角形判断")
     @CsvSource({
@@ -131,7 +135,44 @@ public class TriangleCheckerTest {
             "7, 24, 25"
     })
     public void testDetermineTriangleType_Scalene(int a, int b, int c) {
-        logger.info("Scalene: {} testDetermineTriangleType_Scalene: {}", new int[]{a, b, c},TriangleChecker.determineTriangleType(a, b, c));
+        logger.info("Scalene: {} testDetermineTriangleType_Scalene: {}", new int[]{a, b, c}, TriangleChecker.determineTriangleType(a, b, c));
         assertEquals("一般三角形", TriangleChecker.determineTriangleType(a, b, c));
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("参数合法性最坏情况健壮性边界值分析")
+//    @CsvFileSource(resources = "/GeneralBoundary.csv",numLinesToSkip = 1)
+//    @CsvFileSource(resources = "/RobustBoundary.csv",numLinesToSkip = 1)
+//    @CsvFileSource(resources = "/WorstCaseGeneral.csv",numLinesToSkip = 1)
+    @CsvFileSource(resources = "/WorstCaseRobust.csv", numLinesToSkip = 1)
+    public void testGeneralBoundary(int a, int b, int c, boolean isValid) {
+        if (isValid) {
+            assertDoesNotThrow(() -> TriangleChecker.parseAndValidate(new String[]{String.valueOf(a), String.valueOf(b), String.valueOf(c)}));
+        } else {
+            assertThrows(IllegalArgumentException.class, () -> TriangleChecker.parseAndValidate(new String[]{String.valueOf(a), String.valueOf(b), String.valueOf(c)}));
+        }
+    }
+
+
+    @ParameterizedTest
+    @DisplayName("合法三角形最坏情况健壮性边界值分析")
+//    @CsvFileSource(resources = "/GeneralBoundary.csv", numLinesToSkip = 1)
+//    @CsvFileSource(resources = "/RobustBoundary.csv",numLinesToSkip = 1)
+//    @CsvFileSource(resources = "/WorstCaseGeneral.csv",numLinesToSkip = 1)
+    @CsvFileSource(resources = "/WorstCaseRobust.csv",numLinesToSkip = 1)
+    public void testIsTriangle(int a, int b, int c, boolean isValid, boolean isTriangle) {
+        if (isTriangle) {
+            assertTrue(TriangleChecker.isTriangle(a, b, c));
+        } else {
+            assertFalse(TriangleChecker.isTriangle(a, b, c));
+        }
+    }
+
+    @ParameterizedTest
+    @DisplayName("三角形类型最坏情况健壮性边界值分析")
+    @CsvFileSource(resources = "/WorstCaseRobustType.csv", numLinesToSkip = 1)
+    public void testDetermineTriangleType(int a, int b, int c, String expected) {
+        assertEquals(expected, TriangleChecker.determineTriangleType(a, b, c));
     }
 }

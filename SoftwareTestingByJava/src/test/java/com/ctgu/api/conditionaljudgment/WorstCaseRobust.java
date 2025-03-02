@@ -1,10 +1,11 @@
-package com.ctgu.api.tools;
+package com.ctgu.api.conditionaljudgment;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.ctgu.api.tools.ParameterClassification.isValid;
-import static com.ctgu.api.tools.WriteToFile.writeToFile;
+import static com.ctgu.api.conditionaljudgment.ParameterClassification.isTriangle;
+import static com.ctgu.api.conditionaljudgment.ParameterClassification.isValid;
+import static com.ctgu.api.growthparameter.WriteToFile.writeToFile;
 
 public class WorstCaseRobust {
     /**
@@ -18,7 +19,8 @@ public class WorstCaseRobust {
             for (int b : boundaries) {
                 for (int c : boundaries) {
                     boolean valid = isValid(a, b, c);
-                    testCases.add(String.format("%d,%d,%d,%b", a, b, c, valid));
+                    boolean triangle = isTriangle(a, b, c);
+                    testCases.add(String.format("%d,%d,%d,%b,%b", a, b, c, valid, triangle));
                 }
             }
         }
