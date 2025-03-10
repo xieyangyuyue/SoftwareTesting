@@ -1,4 +1,4 @@
-package main
+package triangle
 
 import (
 	"SoftwareTestingByGolang/testutils" // 替换为实际模块路径
@@ -11,7 +11,7 @@ func TestTriangle(t *testing.T) {
 	//csvPath := filepath.Join("testdata", "GeneralBoundary.csv")
 	//csvPath := filepath.Join("testdata", "RobustBoundary.csv")
 	//csvPath := filepath.Join("testdata", "WorstCaseGeneral.csv")
-	csvPath := filepath.Join("testdata", "WorstCaseRobust.csv")
+	csvPath := filepath.Join("../testdata", "WorstCaseRobust.csv")
 
 	testCases, err := testutils.LoadCSVTestCases(csvPath, true)
 	if err != nil {

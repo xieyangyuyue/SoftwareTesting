@@ -1,4 +1,4 @@
-package main
+package triangle
 
 import (
 	"errors"  // 导入errors包，用于创建自定义错误

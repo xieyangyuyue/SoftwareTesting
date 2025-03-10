@@ -11,8 +11,12 @@
     <groupId>com.ctgu</groupId>
     <artifactId>api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
     <name>JavaPart</name>
     <description>JavaPart</description>
+    <modules>
+        <module>BillingCaclulate</module>
+    </modules>
 
     <properties>
         <java.version>17</java.version>
