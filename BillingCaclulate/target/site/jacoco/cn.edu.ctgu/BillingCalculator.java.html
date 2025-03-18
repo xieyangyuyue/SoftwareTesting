@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BillingCalculator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BillingCaclulate</a> &gt; <a href="index.source.html" class="el_package">cn.edu.ctgu</a> &gt; <span class="el_source">BillingCalculator.java</span></div><h1>BillingCalculator.java</h1><pre class="source lang-java linenums">package cn.edu.ctgu;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+
+/**
+ * 处理通话计费逻辑，包含时长计算和费用计算功能.
+ * 该类提供基于调整后通话时长（考虑夏令时和取整规则）的费用计算功能，
+ * 支持基础费率和分段费率两种计费模式。
+ */
+<span class="fc" id="L14">public class BillingCalculator {</span>
+<span class="fc" id="L15">    private static final Logger LOGGER = LoggerFactory.getLogger(BillingCalculator.class);</span>
+
+    private static final int CEILING_ADJUSTMENT = 59;
+    private static final int SECONDS_PER_MINUTE = 60;
+    private static final int BASE_MINUTES_LIMIT = 20;
+    private static final double BASE_RATE = 0.05;
+    private static final double EXTRA_RATE = 0.10;
+    private static final double BASE_FEE = 1.00;
+    private static final int MINIMUM_BILLABLE_MINUTES = 1;
+
+    /**
+     * 计算调整后的通话时长（分钟），考虑夏令时和向上取整规则.
+     * 实际计算时会进行以下处理：
+     * 1. 计算精确到秒的时间差
+     * 2. 向上取整到分钟（例如30秒→1分钟，61秒→2分钟）
+     * 3. 保证至少计费1分钟
+     *
+     * @param start 通话开始时间（带时区）
+     * @param end   通话结束时间（带时区）
+     * @return 调整后的计费分钟数（至少1分钟）
+     */
+    public int calculateAdjustedDuration(ZonedDateTime start, ZonedDateTime end) {
+<span class="fc" id="L37">        long seconds = ChronoUnit.SECONDS.between(start, end);</span>
+<span class="fc" id="L38">        LOGGER.debug(&quot;时间差计算: [{}] 到 [{}] -&gt; {} 秒&quot;, start, end, seconds);</span>
+
+<span class="fc" id="L40">        long totalMinutes = (seconds + CEILING_ADJUSTMENT) / SECONDS_PER_MINUTE;</span>
+<span class="fc" id="L41">        LOGGER.debug(&quot;向上取整后分钟数: {} 分钟&quot;, totalMinutes);</span>
+
+<span class="fc" id="L43">        int adjustedMinutes = (int) Math.max(totalMinutes, MINIMUM_BILLABLE_MINUTES);</span>
+<span class="fc" id="L44">        LOGGER.info(&quot;最终计费时长: {} 分钟&quot;, adjustedMinutes);</span>
+<span class="fc" id="L45">        return adjustedMinutes;</span>
+    }
+
+    /**
+     * 根据调整后的通话时长计算费用.
+     * 使用分段计费策略：
+     * 1. 20分钟及以下：0.05美元/分钟
+     * 2. 超过20分钟：1美元基础费 + 超时部分0.10美元/分钟
+     *
+     * @param adjustedMinutes 调整后的通话分钟数
+     * @return 计算出的费用（美元）
+     */
+    public double calculateCharge(int adjustedMinutes) {
+<span class="fc" id="L58">        LOGGER.debug(&quot;计算费用，时长: {} 分钟&quot;, adjustedMinutes);</span>
+
+        double charge;
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (adjustedMinutes &lt;= BASE_MINUTES_LIMIT) {</span>
+<span class="fc" id="L62">            charge = BASE_RATE * adjustedMinutes;</span>
+<span class="fc" id="L63">            LOGGER.trace(&quot;基础费率: {}$&quot;, charge);</span>
+        } else {
+<span class="fc" id="L65">            double extraCharge = EXTRA_RATE * (adjustedMinutes - BASE_MINUTES_LIMIT);</span>
+<span class="fc" id="L66">            charge = BASE_FEE + extraCharge;</span>
+<span class="fc" id="L67">            LOGGER.trace(&quot;分段费率: 基础1$ + 超时部分{}$ = {}$&quot;, extraCharge, charge);</span>
+        }
+
+<span class="fc" id="L70">        LOGGER.info(&quot;最终费用: {}$&quot;, charge);</span>
+<span class="fc" id="L71">        return charge;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
