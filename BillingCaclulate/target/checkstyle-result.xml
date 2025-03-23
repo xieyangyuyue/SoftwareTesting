@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<checkstyle version="8.9">
-<file name="E:\githubRepository\SoftwareTesting\BillingCaclulate\src\main\java\cn\edu\ctgu\BillingCalculator.java">
-</file>
-<file name="E:\githubRepository\SoftwareTesting\BillingCaclulate\src\test\java\cn\edu\ctgu\BillingCalculatorTest.java">
-<error line="121" severity="warning" message="本行字符数 104个，最多：100个。" source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
-<error line="183" severity="warning" message="本行字符数 101个，最多：100个。" source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
-</file>
-</checkstyle>
