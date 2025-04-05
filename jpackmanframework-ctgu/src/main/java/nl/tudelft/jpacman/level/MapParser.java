@@ -1,12 +1,5 @@
 package nl.tudelft.jpacman.level;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import nl.tudelft.jpacman.PacmanConfigurationException;
-import nl.tudelft.jpacman.board.Board;
-import nl.tudelft.jpacman.board.BoardFactory;
-import nl.tudelft.jpacman.board.Square;
-import nl.tudelft.jpacman.npc.Ghost;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,28 +8,44 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.tudelft.jpacman.PacmanConfigurationException;
+import nl.tudelft.jpacman.board.Board;
+import nl.tudelft.jpacman.board.BoardFactory;
+import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.npc.Ghost;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
- * Creates new {@link Level}s from text representations.
- *
+ * 地图解析器：将文本格式的地图转换为可玩的游戏关卡。
+ * <p>
+ * 支持字符说明：
+ * <ul>
+ * <li>' ' - 空地</li>
+ * <li>'#' - 墙壁</li>
+ * <li>'.' - 豆子</li>
+ * <li>'P' - 玩家起始位置</li>
+ * <li>'G' - 幽灵</li>
+ * </ul>
+ * 
  * @author Jeroen Roosen
  */
 public class MapParser {
 
     /**
-     * The factory that creates the levels.
+     * 关卡工厂：用于创建关卡、豆子和幽灵对象
      */
     private final LevelFactory levelCreator;
 
     /**
-     * The factory that creates the squares and board.
+     * 地图工厂：用于创建地图方块（地面、墙壁）和游戏面板
      */
     private final BoardFactory boardCreator;
 
     /**
-     * Creates a new map parser.
-     *
-     * @param levelFactory The factory providing the NPC objects and the level.
-     * @param boardFactory The factory providing the Square objects and the board.
+     * 构造地图解析器
+     * 
+     * @param levelFactory 关卡工厂，提供NPC和关卡创建功能
+     * @param boardFactory 地图工厂，提供方块和面板创建功能
      */
     public MapParser(LevelFactory levelFactory, BoardFactory boardFactory) {
         this.levelCreator = levelFactory;
@@ -44,38 +53,42 @@ public class MapParser {
     }
 
     /**
-     * Parses the text representation of the board into an actual level.
-     *
-     * <ul>
-     * <li>Supported characters:
-     * <li>' ' (space) an empty square.
-     * <li>'#' (bracket) a wall.
-     * <li>'.' (period) a square with a pellet.
-     * <li>'P' (capital P) a starting square for players.
-     * <li>'G' (capital G) a square with a ghost.
-     * </ul>
-     *
-     * @param map The text representation of the board, with map[x][y]
-     *            representing the square at position x,y.
-     * @return The level as represented by this text.
+     * 解析二维字符数组生成游戏关卡
+     * 
+     * @param map 二维字符数组，map[x][y]表示坐标(x,y)的方块类型
+     * @return 生成的游戏关卡对象
+     * @throws PacmanConfigurationException 如果遇到无效字符或格式错误
      */
     public Level parseMap(char[][] map) {
+        // 验证地图尺寸
         int width = map.length;
         int height = map[0].length;
 
+        // 初始化游戏元素存储
         Square[][] grid = new Square[width][height];
-
         List<Ghost> ghosts = new ArrayList<>();
         List<Square> startPositions = new ArrayList<>();
 
+        // 填充地图网格
         makeGrid(map, width, height, grid, ghosts, startPositions);
 
+        // 创建游戏面板和关卡
         Board board = boardCreator.createBoard(grid);
         return levelCreator.createLevel(board, ghosts, startPositions);
     }
 
+    /**
+     * 遍历地图字符填充网格
+     * 
+     * @param map           原始字符地图
+     * @param width         地图宽度
+     * @param height        地图高度
+     * @param grid          目标方块网格
+     * @param ghosts        幽灵集合（输出参数）
+     * @param startPositions 玩家起始位置集合（输出参数）
+     */
     private void makeGrid(char[][] map, int width, int height,
-                          Square[][] grid, List<Ghost> ghosts, List<Square> startPositions) {
+                         Square[][] grid, List<Ghost> ghosts, List<Square> startPositions) {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 char c = map[x][y];
@@ -85,132 +98,124 @@ public class MapParser {
     }
 
     /**
-     * Adds a square to the grid based on a given character. These
-     * character come from the map files and describe the type
-     * of square.
-     *
-     * @param grid           The grid of squares with board[x][y] being the
-     *                       square at column x, row y.
-     * @param ghosts         List of all ghosts that were added to the map.
-     * @param startPositions List of all start positions that were added
-     *                       to the map.
-     * @param x              x coordinate of the square.
-     * @param y              y coordinate of the square.
-     * @param c              Character describing the square type.
+     * 根据字符创建对应类型的游戏方块
+     * 
+     * @param grid           方块网格
+     * @param ghosts         幽灵集合（输出参数）
+     * @param startPositions 玩家起始位置集合（输出参数）
+     * @param x              X坐标
+     * @param y              Y坐标
+     * @param c              地图字符
+     * @throws PacmanConfigurationException 如果遇到无效字符
      */
     protected void addSquare(Square[][] grid, List<Ghost> ghosts,
-                             List<Square> startPositions, int x, int y, char c) {
+                            List<Square> startPositions, int x, int y, char c) {
         switch (c) {
-            case ' ':
+            case ' ' ->  // 空地
                 grid[x][y] = boardCreator.createGround();
-                break;
-            case '#':
+            
+            case '#' ->  // 墙壁
                 grid[x][y] = boardCreator.createWall();
-                break;
-            case '.':
+            
+            case '.' -> {  // 豆子
                 Square pelletSquare = boardCreator.createGround();
                 grid[x][y] = pelletSquare;
+                // 在方块上放置豆子
                 levelCreator.createPellet().occupy(pelletSquare);
-                break;
-            case 'G':
-                Square ghostSquare = makeGhostSquare(ghosts, levelCreator.createGhost());
+            }
+            
+            case 'G' -> {  // 幽灵
+                Ghost ghost = levelCreator.createGhost();
+                Square ghostSquare = makeGhostSquare(ghosts, ghost);
                 grid[x][y] = ghostSquare;
-                break;
-            case 'P':
+            }
+            
+            case 'P' -> {  // 玩家起始位置
                 Square playerSquare = boardCreator.createGround();
                 grid[x][y] = playerSquare;
                 startPositions.add(playerSquare);
-                break;
-            default:
-                throw new PacmanConfigurationException("Invalid character at "
+            }
+            
+            default ->  // 无效字符处理
+                throw new PacmanConfigurationException("非法字符位于 " 
                     + x + "," + y + ": " + c);
         }
     }
 
     /**
-     * creates a Square with the specified ghost on it
-     * and appends the placed ghost into the ghost list.
-     *
-     * @param ghosts all the ghosts in the level so far, the new ghost will be appended
-     * @param ghost  the newly created ghost to be placed
-     * @return a square with the ghost on it.
+     * 创建幽灵方块并注册幽灵对象
+     * 
+     * @param ghosts 幽灵集合（输出参数）
+     * @param ghost  新创建的幽灵对象
+     * @return 包含幽灵的方块
      */
     protected Square makeGhostSquare(List<Ghost> ghosts, Ghost ghost) {
         Square ghostSquare = boardCreator.createGround();
         ghosts.add(ghost);
-        ghost.occupy(ghostSquare);
+        ghost.occupy(ghostSquare);  // 让幽灵占据方块
         return ghostSquare;
     }
 
     /**
-     * Parses the list of strings into a 2-dimensional character array and
-     * passes it on to {@link #parseMap(char[][])}.
-     *
-     * @param text The plain text, with every entry in the list being an equally
-     *             sized row of squares on the board and the first element being
-     *             the top row.
-     * @return The level as represented by the text.
-     * @throws PacmanConfigurationException If text lines are not properly formatted.
+     * 解析字符串列表生成游戏关卡
+     * 
+     * @param text 字符串列表，每个字符串代表一行地图
+     * @return 生成的游戏关卡对象
+     * @throws PacmanConfigurationException 如果地图格式错误
      */
     public Level parseMap(List<String> text) {
-
         checkMapFormat(text);
-
+        
         int height = text.size();
         int width = text.get(0).length();
-
+        
+        // 将字符串列表转换为二维字符数组
         char[][] map = new char[width][height];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                map[x][y] = text.get(y).charAt(x);
+                map[x][y] = text.get(y).charAt(x);  // 注意坐标转换
             }
         }
         return parseMap(map);
     }
 
     /**
-     * Check the correctness of the map lines in the text.
-     *
-     * @param text Map to be checked
-     * @throws PacmanConfigurationException if map is not OK.
+     * 验证地图文本格式
+     * 
+     * @param text 地图文本行
+     * @throws PacmanConfigurationException 如果格式不符合要求
      */
     private void checkMapFormat(List<String> text) {
         if (text == null) {
-            throw new PacmanConfigurationException(
-                "Input text cannot be null.");
+            throw new PacmanConfigurationException("地图文本不能为null");
         }
-
+        
         if (text.isEmpty()) {
-            throw new PacmanConfigurationException(
-                "Input text must consist of at least 1 row.");
+            throw new PacmanConfigurationException("地图必须至少包含一行");
         }
-
+        
         int width = text.get(0).length();
-
         if (width == 0) {
-            throw new PacmanConfigurationException(
-                "Input text lines cannot be empty.");
+            throw new PacmanConfigurationException("地图行不能为空");
         }
-
+        
         for (String line : text) {
             if (line.length() != width) {
-                throw new PacmanConfigurationException(
-                    "Input text lines are not of equal width.");
+                throw new PacmanConfigurationException("地图行宽度不一致");
             }
         }
     }
 
     /**
-     * Parses the provided input stream as a character stream and passes it
-     * result to {@link #parseMap(List)}.
-     *
-     * @param source The input stream that will be read.
-     * @return The parsed level as represented by the text on the input stream.
-     * @throws IOException when the source could not be read.
+     * 从输入流解析地图
+     * 
+     * @param source 输入流
+     * @return 生成的游戏关卡对象
+     * @throws IOException 读取失败时抛出
      */
     public Level parseMap(InputStream source) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-            source, StandardCharsets.UTF_8))) {
+                source, StandardCharsets.UTF_8))) {
             List<String> lines = new ArrayList<>();
             while (reader.ready()) {
                 lines.add(reader.readLine());
@@ -220,26 +225,27 @@ public class MapParser {
     }
 
     /**
-     * Parses the provided input stream as a character stream and passes it
-     * result to {@link #parseMap(List)}.
-     *
-     * @param mapName Name of a resource that will be read.
-     * @return The parsed level as represented by the text on the input stream.
-     * @throws IOException when the resource could not be read.
+     * 从资源文件解析地图
+     * 
+     * @param mapName 资源文件路径
+     * @return 生成的游戏关卡对象
+     * @throws IOException 读取失败时抛出
      */
     @SuppressFBWarnings(value = "OBL_UNSATISFIED_OBLIGATION",
-        justification = "try with resources always cleans up")
+            justification = "使用try-with-resources确保资源释放")
     public Level parseMap(String mapName) throws IOException {
         try (InputStream boardStream = MapParser.class.getResourceAsStream(mapName)) {
             if (boardStream == null) {
-                throw new PacmanConfigurationException("Could not get resource for: " + mapName);
+                throw new PacmanConfigurationException("找不到资源文件: " + mapName);
             }
             return parseMap(boardStream);
         }
     }
 
     /**
-     * @return the BoardCreator
+     * 获取地图工厂（用于测试或扩展）
+     * 
+     * @return 地图工厂实例
      */
     protected BoardFactory getBoardCreator() {
         return boardCreator;

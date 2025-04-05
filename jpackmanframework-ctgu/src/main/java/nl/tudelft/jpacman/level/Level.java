@@ -361,13 +361,13 @@ public class Level {
     public interface LevelObserver {
 
         /**
-         * The level has been won. Typically the level should be stopped when
+         * The level has been won. Typically, the level should be stopped when
          * this event is received.
          */
         void levelWon();
 
         /**
-         * The level has been lost. Typically the level should be stopped when
+         * The level has been lost. Typically, the level should be stopped when
          * this event is received.
          */
         void levelLost();

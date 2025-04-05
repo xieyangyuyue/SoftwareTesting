@@ -4,7 +4,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
@@ -13,55 +12,43 @@ import nl.tudelft.jpacman.npc.Ghost;
 import nl.tudelft.jpacman.sprite.Sprite;
 
 /**
+ * 经典Pac-Man幽灵Clyde（别名Pokey）的实现。
  * <p>
- * An implementation of the classic Pac-Man ghost Clyde.
- * </p>
+ * Clyde的特性：
+ * - 最后一个离开重生区域的幽灵，通常独自巡逻迷宫左下角
+ * - 当距离Pac-Man超过8格时，像Blink一样精准追踪
+ * - 当距离小于等于8格时，切换为逃跑模式
+ * - 行为具有一定随机性，危险系数较高
  * <p>
- * Pokey needs a new nickname because out of all the ghosts,
- * Clyde is the least likely to "C'lyde" with Pac-Man. Clyde is always the last
- * ghost out of the regenerator, and the loner of the gang, usually off doing
- * his own thing when not patrolling the bottom-left corner of the maze. His
- * behavior is very random, so while he's not likely to be following you in hot
- * pursuit with the other ghosts, he is a little less predictable, and still a
- * danger.
- * </p>
- * <p>
- * <b>AI:</b> Clyde has two basic AIs, one for when he's far from Pac-Man, and
- * one for when he is near to Pac-Man. 
- * When Clyde is far away from Pac-Man (beyond eight grid spaces),
- * Clyde behaves very much like Blinky, trying to move to Pac-Man's exact
- * location. However, when Clyde gets within eight grid spaces of Pac-Man, he
- * automatically changes his behavior and runs away.
- * </p>
- * <p>
- * Source: http://strategywiki.org/wiki/Pac-Man/Getting_Started
- * </p>
+ * AI逻辑说明：
+ * 使用双模式AI，通过路径长度判断距离状态。基于策略Wiki的行为描述实现。
  *
+ * @see <a href="http://strategywiki.org/wiki/Pac-Man/Getting_Started">行为策略参考</a>
  * @author Jeroen Roosen
  */
 public class Clyde extends Ghost {
 
     /**
-     * The amount of cells Clyde wants to stay away from Pac Man.
+     * 警戒距离阈值（单位：网格），当与Pac-Man距离≤8时切换行为
      */
     private static final int SHYNESS = 8;
 
     /**
-     * The variation in intervals, this makes the ghosts look more dynamic and
-     * less predictable.
+     * 移动间隔随机性参数（毫秒），增加幽灵行为动态性
      */
     private static final int INTERVAL_VARIATION = 50;
 
     /**
-     * The base movement interval.
+     * 基础移动间隔（毫秒）
      */
     private static final int MOVE_INTERVAL = 250;
 
     /**
-     * A map of opposite directions.
+     * 方向反向映射表，用于逃跑时取反方向
      */
     private static final Map<Direction, Direction> OPPOSITES = new EnumMap<>(Direction.class);
 
+    // 静态初始化方向反向映射
     static {
         OPPOSITES.put(Direction.NORTH, Direction.SOUTH);
         OPPOSITES.put(Direction.SOUTH, Direction.NORTH);
@@ -70,45 +57,48 @@ public class Clyde extends Ghost {
     }
 
     /**
-     * Creates a new "Clyde", a.k.a. "Pokey".
+     * 构造函数，初始化Clyde的精灵和移动参数
      *
-     * @param spriteMap The sprites for this ghost.
+     * @param spriteMap 包含各方向精灵动画的映射
      */
     public Clyde(Map<Direction, Sprite> spriteMap) {
         super(spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
     }
 
     /**
-     * {@inheritDoc}
+     * 计算下一步移动方向（AI核心逻辑）
      *
-     * <p>
-     * Clyde has two basic AIs, one for when he's far from Pac-Man, and one for
-     * when he is near to Pac-Man. 
-     * When Clyde is far away from Pac-Man (beyond eight grid spaces),
-     * Clyde behaves very much like Blinky, trying to move to Pac-Man's exact
-     * location. However, when Clyde gets within eight grid spaces of Pac-Man,
-     * he automatically changes his behavior and runs away
-     * </p>
+     * @return Optional包装的移动方向，空表示无有效移动
      */
     @Override
     public Optional<Direction> nextAiMove() {
+        // 断言确保幽灵当前位于某个方格上
         assert hasSquare();
 
+        // 寻找最近的玩家单位
         Unit nearest = Navigation.findNearest(Player.class, getSquare());
         if (nearest == null) {
-            return Optional.empty();
+            return Optional.empty(); // 无玩家可追踪
         }
+
+        // 获取玩家所在方格并计算最短路径
         assert nearest.hasSquare();
         Square target = nearest.getSquare();
-
         List<Direction> path = Navigation.shortestPath(getSquare(), target, this);
+
         if (path != null && !path.isEmpty()) {
-            Direction direction = path.get(0);
+            Direction direction = path.get(0); // 取路径第一步方向
+
+            // 根据距离阈值决定行为模式
             if (path.size() <= SHYNESS) {
+                // 近距离模式：朝反方向移动（逃跑）
                 return Optional.ofNullable(OPPOSITES.get(direction));
+            } else {
+                // 远距离模式：向玩家方向移动（追击）
+                return Optional.of(direction);
             }
-            return Optional.of(direction);
         }
-        return Optional.empty();
+
+        return Optional.empty(); // 无有效路径
     }
 }

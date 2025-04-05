@@ -1,35 +1,37 @@
 package nl.tudelft.jpacman.board;
 
-
 /**
- * A top-down view of a matrix of {@link Square}s.
+ * 表示游戏棋盘，由二维方块（Square）矩阵构成，提供棋盘尺寸查询和方块访问功能。
+ * 本类保证棋盘初始化后所有方块非空，并提供安全的坐标边界检查。
  *
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
  */
 public class Board {
 
     /**
-     * The grid of squares with board[x][y] being the square at column x, row y.
+     * 存储棋盘的二维方块数组，board[x][y]表示第x列、第y行的方块。
+     * 该数组在构造时直接引用传入的grid参数，调用者需确保其不可变性。
      */
     private final Square[][] board;
 
     /**
-     * Creates a new board.
+     * 构造棋盘实例。
+     * 注：直接存储传入的grid引用（未做防御性拷贝），需确保外部不会修改原数组。
      *
-     * @param grid
-     *            The grid of squares with grid[x][y] being the square at column
-     *            x, row y.
+     * @param grid 二维方块数组，需满足grid[x][y]不为null且为矩形结构
+     * @throws AssertionError 如果grid包含null元素或非矩形结构
      */
     @SuppressWarnings("PMD.ArrayIsStoredDirectly")
     Board(Square[][] grid) {
         assert grid != null;
         this.board = grid;
-        assert invariant() : "Initial grid cannot contain null squares";
+        // 强制检查棋盘不变式：所有方块必须非空
+        assert invariant() : "初始棋盘包含null方块，违反不变式！";
     }
 
     /**
-     * Whatever happens, the squares on the board can't be null.
-     * @return false if any square on the board is null.
+     * 棋盘不变式校验：确保所有方块非空。
+     * @return 如果任意方块为null返回false，否则返回true
      */
     protected final boolean invariant() {
         for (Square[] row : board) {
@@ -43,50 +45,44 @@ public class Board {
     }
 
     /**
-     * Returns the number of columns.
-     *
-     * @return The width of this board.
+     * 获取棋盘列数（宽度）。
+     * @return 棋盘列数，即二维数组第一维长度
      */
     public int getWidth() {
         return board.length;
     }
 
     /**
-     * Returns the number of rows.
-     *
-     * @return The height of this board.
+     * 获取棋盘行数（高度）。
+     * 注意：假设棋盘为矩形结构，取第一列的长度作为行数。
+     * @return 棋盘行数，即二维数组第二维长度
      */
     public int getHeight() {
         return board[0].length;
     }
 
     /**
-     * Returns the square at the given <code>x,y</code> position.
+     * 获取指定坐标的方块。
+     * 前置条件：坐标(x, y)必须在棋盘范围内（可通过withinBorders()验证）
      *
-     * Precondition: The <code>(x, y)</code> coordinates are within the
-     * width and height of the board.
-     *
-     * @param x
-     *            The <code>x</code> position (column) of the requested square.
-     * @param y
-     *            The <code>y</code> position (row) of the requested square.
-     * @return The square at the given <code>x,y</code> position (never null).
+     * @param x 列索引（从0开始）
+     * @param y 行索引（从0开始）
+     * @return 非空的Square对象
+     * @throws AssertionError 如果坐标越界或返回null（违反不变式）
      */
     public Square squareAt(int x, int y) {
-        assert withinBorders(x, y);
+        assert withinBorders(x, y) : "访问越界坐标 (" + x + ", " + y + ")";
         Square result = board[x][y];
-        assert result != null : "Follows from invariant.";
+        assert result != null : "不变式被破坏：棋盘包含null方块！";
         return result;
     }
 
     /**
-     * Determines whether the given <code>x,y</code> position is on this board.
+     * 验证坐标是否在棋盘合法范围内。
      *
-     * @param x
-     *            The <code>x</code> position (row) to test.
-     * @param y
-     *            The <code>y</code> position (column) to test.
-     * @return <code>true</code> iff the position is on this board.
+     * @param x 列索引
+     * @param y 行索引
+     * @return true表示坐标有效，false表示越界
      */
     public boolean withinBorders(int x, int y) {
         return x >= 0 && x < getWidth() && y >= 0 && y < getHeight();
