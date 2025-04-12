@@ -1,48 +1,46 @@
 package nl.tudelft.jpacman.level;
 
+import nl.tudelft.jpacman.board.Unit;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import nl.tudelft.jpacman.board.Unit;
-
 /**
- * A map of possible collisions and their handlers.
+ * 碰撞交互映射表，实现碰撞处理逻辑的核心类。
+ * 通过注册不同类型的碰撞处理器（CollisionHandler），管理游戏中各种单位（Unit）间的碰撞响应。
+ * 支持双向对称碰撞处理和继承关系匹配，自动选择最具体的碰撞处理器。
  *
  * @author Michael de Jong
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
  */
 public class CollisionInteractionMap implements CollisionMap {
 
     /**
-     * The collection of collision handlers.
+     * 碰撞处理器双层映射表结构：
+     * 外层Map键：碰撞发起者（Collider）的类类型
+     * 内层Map键：被碰撞者（Collidee）的类类型
+     * 值：对应的碰撞处理器实例
      */
     private final Map<Class<? extends Unit>,
         Map<Class<? extends Unit>, CollisionHandler<?, ?>>> handlers;
 
     /**
-     * Creates a new, empty collision map.
+     * 构造空碰撞映射表。
      */
     public CollisionInteractionMap() {
         this.handlers = new HashMap<>();
     }
 
     /**
-     * Adds a two-way collision interaction to this collection, i.e. the
-     * collision handler will be used for both C1 versus C2 and C2 versus C1.
+     * 注册双向对称的碰撞处理器（自动处理A-B和B-A两种碰撞情况）。
      *
-     * @param <C1>
-     *            The collider type.
-     * @param <C2>
-     *            The collidee (unit that was moved into) type.
-     *
-     * @param collider
-     *            The collider type.
-     * @param collidee
-     *            The collidee type.
-     * @param handler
-     *            The handler that handles the collision.
+     * @param collider 碰撞发起者类型（如Player.class）
+     * @param collidee 被碰撞者类型（如Ghost.class）
+     * @param handler  碰撞处理器实例
+     * @param <C1>     碰撞发起者泛型类型
+     * @param <C2>     被碰撞者泛型类型
      */
     public <C1 extends Unit, C2 extends Unit> void onCollision(
         Class<C1> collider, Class<C2> collidee, CollisionHandler<C1, C2> handler) {
@@ -50,202 +48,135 @@ public class CollisionInteractionMap implements CollisionMap {
     }
 
     /**
-     * Adds a collision interaction to this collection.
+     * 注册碰撞处理器，可指定是否对称处理。
      *
-     * @param <C1>
-     *            The collider type.
-     * @param <C2>
-     *            The collidee (unit that was moved into) type.
-     *
-     * @param collider
-     *            The collider type.
-     * @param collidee
-     *            The collidee type.
-     * @param symetric
-     *            <code>true</code> if this collision is used for both
-     *            C1 against C2 and vice versa;
-     *            <code>false</code> if only for C1 against C2.
-     * @param handler
-     *            The handler that handles the collision.
+     * @param collider  碰撞发起者类型
+     * @param collidee  被碰撞者类型
+     * @param symmetric 是否自动生成反向处理器
+     * @param handler   原始碰撞处理器
      */
     public <C1 extends Unit, C2 extends Unit> void onCollision(
-        Class<C1> collider, Class<C2> collidee, boolean symetric,
+        Class<C1> collider, Class<C2> collidee, boolean symmetric,
         CollisionHandler<C1, C2> handler) {
         addHandler(collider, collidee, handler);
-        if (symetric) {
+        if (symmetric) {
+            // 创建反向处理器交换碰撞双方位置
             addHandler(collidee, collider, new InverseCollisionHandler<>(handler));
         }
     }
 
     /**
-     * Adds the collision interaction..
+     * 将处理器添加到映射表中。
      *
-     * @param collider
-     *            The collider type.
-     * @param collidee
-     *            The collidee type.
-     * @param handler
-     *            The handler that handles the collision.
+     * @param collider 碰撞发起者类型
+     * @param collidee 被碰撞者类型
+     * @param handler  处理器实例
      */
     private void addHandler(Class<? extends Unit> collider,
                             Class<? extends Unit> collidee, CollisionHandler<?, ?> handler) {
-        if (!handlers.containsKey(collider)) {
-            handlers.put(collider, new HashMap<>());
-        }
-
-        Map<Class<? extends Unit>, CollisionHandler<?, ?>> map = handlers.get(collider);
-        map.put(collidee, handler);
+        handlers.computeIfAbsent(collider, k -> new HashMap<>())
+            .put(collidee, handler);
     }
 
     /**
-     * Handles the collision between two colliding parties, if a suitable
-     * collision handler is listed.
+     * 处理两个单位的碰撞事件，自动匹配最具体的处理器。
      *
-     * @param <C1>
-     *            The collider type.
-     * @param <C2>
-     *            The collidee (unit that was moved into) type.
-     *
-     * @param collider
-     *            The collider.
-     * @param collidee
-     *            The collidee.
+     * @param collider 碰撞发起者实例（如玩家）
+     * @param collidee 被碰撞者实例（如幽灵）
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <C1 extends Unit, C2 extends Unit> void collide(C1 collider,
-                                                           C2 collidee) {
+    public <C1 extends Unit, C2 extends Unit> void collide(C1 collider, C2 collidee) {
+        // 获取collider的最匹配类型
         Class<? extends Unit> colliderKey = getMostSpecificClass(handlers, collider.getClass());
-        if (colliderKey == null) {
-            return;
-        }
+        if (colliderKey == null) return;
 
+        // 获取collidee的最匹配类型
         Map<Class<? extends Unit>, CollisionHandler<?, ?>> map = handlers.get(colliderKey);
         Class<? extends Unit> collideeKey = getMostSpecificClass(map, collidee.getClass());
-        if (collideeKey == null) {
-            return;
-        }
+        if (collideeKey == null) return;
 
-        CollisionHandler<C1, C2> collisionHandler = (CollisionHandler<C1, C2>) map.get(collideeKey);
-        if (collisionHandler == null) {
-            return;
+        // 执行匹配到的处理器
+        CollisionHandler<C1, C2> handler = (CollisionHandler<C1, C2>) map.get(collideeKey);
+        if (handler != null) {
+            handler.handleCollision(collider, collidee);
         }
-
-        collisionHandler.handleCollision(collider, collidee);
     }
 
     /**
-     * Figures out the most specific class that is listed in the map. I.e. if A
-     * extends B and B is listed while requesting A, then B will be returned.
+     * 在映射表中查找最具体的匹配类型（考虑继承层次）。
      *
-     * @param map
-     *            The map with the key collection to find a matching class in.
-     * @param key
-     *            The class to search the most suitable key for.
-     * @return The most specific class from the key collection.
+     * @param map 要搜索的映射表
+     * @param key 要匹配的具体类型
+     * @return 映射表中存在的最近父类或接口类型
      */
     private Class<? extends Unit> getMostSpecificClass(
         Map<Class<? extends Unit>, ?> map, Class<? extends Unit> key) {
-        List<Class<? extends Unit>> collideeInheritance = getInheritance(key);
-        for (Class<? extends Unit> pointer : collideeInheritance) {
-            if (map.containsKey(pointer)) {
-                return pointer;
+        for (Class<? extends Unit> type : getInheritance(key)) {
+            if (map.containsKey(type)) {
+                return type;
             }
         }
         return null;
     }
 
     /**
-     * Returns a list of all classes and interfaces the class inherits.
+     * 获取类型继承链（包含自身、所有父类及实现的接口）。
      *
-     * @param clazz
-     *            The class to create a list of super classes and interfaces
-     *            for.
-     * @return A list of all classes and interfaces the class inherits.
+     * @param clazz 要分析的类类型
+     * @return 继承链列表，按从具体到抽象的顺序排列
      */
     @SuppressWarnings("unchecked")
-    private List<Class<? extends Unit>> getInheritance(
-        Class<? extends Unit> clazz) {
-        List<Class<? extends Unit>> found = new ArrayList<>();
-        found.add(clazz);
+    private List<Class<? extends Unit>> getInheritance(Class<? extends Unit> clazz) {
+        List<Class<? extends Unit>> inheritance = new ArrayList<>();
+        inheritance.add(clazz); // 首先添加自身
 
         int index = 0;
-        while (found.size() > index) {
-            Class<?> current = found.get(index);
+        while (index < inheritance.size()) {
+            Class<?> current = inheritance.get(index++);
+
+            // 添加直接父类
             Class<?> superClass = current.getSuperclass();
             if (superClass != null && Unit.class.isAssignableFrom(superClass)) {
-                found.add((Class<? extends Unit>) superClass);
+                inheritance.add((Class<? extends Unit>) superClass);
             }
-            for (Class<?> classInterface : current.getInterfaces()) {
-                if (Unit.class.isAssignableFrom(classInterface)) {
-                    found.add((Class<? extends Unit>) classInterface);
+
+            // 添加实现接口
+            for (Class<?> iface : current.getInterfaces()) {
+                if (Unit.class.isAssignableFrom(iface)) {
+                    inheritance.add((Class<? extends Unit>) iface);
                 }
             }
-            index++;
         }
-
-        return found;
+        return inheritance;
     }
 
     /**
-     * Handles the collision between two colliding parties.
-     *
-     * @author Michael de Jong
-     *
-     * @param <C1>
-     *            The collider type.
-     * @param <C2>
-     *            The collidee type.
+     * 碰撞处理器功能接口。
      */
     public interface CollisionHandler<C1 extends Unit, C2 extends Unit> {
-
         /**
-         * Handles the collision between two colliding parties.
-         *
-         * @param collider
-         *            The collider.
-         * @param collidee
-         *            The collidee.
+         * 处理碰撞事件的具体逻辑。
          */
         void handleCollision(C1 collider, C2 collidee);
     }
 
     /**
-     * An symmetrical copy of a collision hander.
-     *
-     * @author Michael de Jong
-     *
-     * @param <C1>
-     *            The collider type.
-     * @param <C2>
-     *            The collidee type.
+     * 反向碰撞处理器包装类，用于实现对称碰撞处理。
      */
     private static class InverseCollisionHandler<C1 extends Unit, C2 extends Unit>
         implements CollisionHandler<C1, C2> {
 
-        /**
-         * The handler of this collision.
-         */
         private final CollisionHandler<C2, C1> handler;
 
-        /**
-         * Creates a new collision handler.
-         *
-         * @param handler
-         *            The symmetric handler for this collision.
-         */
         InverseCollisionHandler(CollisionHandler<C2, C1> handler) {
             this.handler = handler;
         }
 
-        /**
-         * Handles this collision by flipping the collider and collidee, making
-         * it compatible with the initial collision.
-         */
         @Override
         public void handleCollision(C1 collider, C2 collidee) {
+            // 交换碰撞双方位置调用原始处理器
             handler.handleCollision(collidee, collider);
         }
     }
-
 }

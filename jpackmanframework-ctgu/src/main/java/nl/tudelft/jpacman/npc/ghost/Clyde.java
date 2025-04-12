@@ -1,15 +1,16 @@
 package nl.tudelft.jpacman.npc.ghost;
 
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.npc.Ghost;
 import nl.tudelft.jpacman.sprite.Sprite;
+
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * 经典Pac-Man幽灵Clyde（别名Pokey）的实现。
@@ -23,8 +24,8 @@ import nl.tudelft.jpacman.sprite.Sprite;
  * AI逻辑说明：
  * 使用双模式AI，通过路径长度判断距离状态。基于策略Wiki的行为描述实现。
  *
- * @see <a href="http://strategywiki.org/wiki/Pac-Man/Getting_Started">行为策略参考</a>
  * @author Jeroen Roosen
+ * @see <a href="http://strategywiki.org/wiki/Pac-Man/Getting_Started">行为策略参考</a>
  */
 public class Clyde extends Ghost {
 
@@ -70,35 +71,68 @@ public class Clyde extends Ghost {
      *
      * @return Optional包装的移动方向，空表示无有效移动
      */
+//    @Override
+//    public Optional<Direction> nextAiMove() {
+//        // 断言确保幽灵当前位于某个方格上
+//        assert hasSquare();
+//
+//        // 寻找最近的玩家单位
+//        Unit nearest = Navigation.findNearest(Player.class, getSquare());
+//        if (nearest == null) {
+//            return Optional.empty(); // 无玩家可追踪
+//        }
+//
+//        // 获取玩家所在方格并计算最短路径
+//        assert nearest.hasSquare();
+//        Square target = nearest.getSquare();
+//        List<Direction> path = Navigation.shortestPath(getSquare(), target, this);
+//
+//        if (path != null && !path.isEmpty()) {
+//            Direction direction = path.get(0); // 取路径第一步方向
+//
+//            // 根据距离阈值决定行为模式
+//            if (path.size() <= SHYNESS) {
+//                // 近距离模式：朝反方向移动（逃跑）
+//               return Optional.ofNullable(OPPOSITES.get(direction));
+////                Optional<Direction> direction1= Optional.ofNullable(OPPOSITES.get(direction));
+//
+//            } else {
+//                // 远距离模式：向玩家方向移动（追击）
+//                return Optional.of(direction);
+//            }
+//        }
+//
+//        return Optional.empty(); // 无有效路径
+//    }
     @Override
     public Optional<Direction> nextAiMove() {
-        // 断言确保幽灵当前位于某个方格上
         assert hasSquare();
 
-        // 寻找最近的玩家单位
         Unit nearest = Navigation.findNearest(Player.class, getSquare());
         if (nearest == null) {
-            return Optional.empty(); // 无玩家可追踪
+            return Optional.empty();
         }
 
-        // 获取玩家所在方格并计算最短路径
         assert nearest.hasSquare();
         Square target = nearest.getSquare();
         List<Direction> path = Navigation.shortestPath(getSquare(), target, this);
 
         if (path != null && !path.isEmpty()) {
-            Direction direction = path.get(0); // 取路径第一步方向
+            Direction direction = path.get(0);
 
-            // 根据距离阈值决定行为模式
             if (path.size() <= SHYNESS) {
-                // 近距离模式：朝反方向移动（逃跑）
-                return Optional.ofNullable(OPPOSITES.get(direction));
+                // 检查反方向是否可行
+                Direction escapeDir = OPPOSITES.get(direction);
+                Square nextSquare = getSquare().getSquareAt(escapeDir);
+                if (nextSquare != null && nextSquare.isAccessibleTo(this)) {
+                    return Optional.of(escapeDir);
+                } else {
+                    return Optional.empty();
+                }
             } else {
-                // 远距离模式：向玩家方向移动（追击）
                 return Optional.of(direction);
             }
         }
-
-        return Optional.empty(); // 无有效路径
+        return Optional.empty();
     }
 }

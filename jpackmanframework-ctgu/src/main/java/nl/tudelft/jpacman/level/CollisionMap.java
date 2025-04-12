@@ -3,28 +3,22 @@ package nl.tudelft.jpacman.level;
 import nl.tudelft.jpacman.board.Unit;
 
 /**
- * A table containing all (relevant) collisions between different types of
- * units.
+ * 一个包含不同类型单位之间所有(相关)碰撞的表格。
+ * <p>
+ * 该接口定义了游戏中不同单位之间碰撞的处理机制。
+ * 实现类需要具体定义不同类型单位碰撞时的行为。
  *
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
  */
 public interface CollisionMap {
 
     /**
-     * Collides the two units and handles the result of the collision, which may
-     * be nothing at all.
+     * 碰撞两个单位并处理碰撞结果，结果可能是什么都不做。
      *
-     * @param <C1>
-     *            The collider type.
-     * @param <C2>
-     *            The collidee (unit that was moved into) type.
-     *
-     * @param collider
-     *            The unit that causes the collision by occupying a square with
-     *            another unit already on it.
-     * @param collidee
-     *            The unit that is already on the square that is being invaded.
+     * @param <C1>     碰撞者类型（必须是Unit的子类）
+     * @param <C2>     被碰撞者类型（必须是Unit的子类）
+     * @param collider 引起碰撞的单位，它移动到了一个已有其他单位的方格
+     * @param collidee 已经被占据的方格上的单位
      */
     <C1 extends Unit, C2 extends Unit> void collide(C1 collider, C2 collidee);
-
 }

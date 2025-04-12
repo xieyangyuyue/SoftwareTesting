@@ -110,6 +110,7 @@ public abstract class Unit {
     protected boolean invariant() {
         return square == null || (square.getOccupants().contains(this) && square.isAccessibleTo(this));
     }
+
     /**
      * 抽象方法，获取单位的精灵（由子类实现）。
      *

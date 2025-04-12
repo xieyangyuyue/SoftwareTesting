@@ -1,29 +1,31 @@
 package nl.tudelft.jpacman.npc.ghost;
 
 /**
- * A list of supported ghost colors.
+ * 表示Pac-Man游戏中幽灵的颜色枚举。
+ * <p>
+ * 每个枚举常量对应一种特定颜色的幽灵及其别名。
  *
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
+ * @since 1.0
  */
 public enum GhostColor {
-
     /**
-     * Shadow, a.k.a. Blinky.
+     * 红色幽灵，别名“Shadow”或“Blinky”。
      */
     RED,
 
     /**
-     * Bashful, a.k.a. Inky.
+     * 青色幽灵，别名“Bashful”或“Inky”。
      */
     CYAN,
 
     /**
-     * Speedy, a.k.a. Pinky.
+     * 粉色幽灵，别名“Speedy”或“Pinky”。
      */
     PINK,
 
     /**
-     * Pokey, a.k.a. Clyde.
+     * 橙色幽灵，别名“Pokey”或“Clyde”。
      */
     ORANGE
 }

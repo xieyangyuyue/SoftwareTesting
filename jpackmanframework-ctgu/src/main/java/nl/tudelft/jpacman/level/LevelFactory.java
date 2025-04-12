@@ -14,128 +14,122 @@ import nl.tudelft.jpacman.sprite.PacManSprites;
 import nl.tudelft.jpacman.sprite.Sprite;
 
 /**
- * Factory that creates levels and units.
+ * 关卡工厂类，负责创建游戏关卡（Level）、幽灵（Ghost）和豆子（Pellet）。
+ * 实现工厂模式，集中管理游戏元素的创建逻辑。
  *
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
  */
 public class LevelFactory {
 
-    private static final int GHOSTS = 4;
-    private static final int BLINKY = 0;
-    private static final int INKY = 1;
-    private static final int PINKY = 2;
-    private static final int CLYDE = 3;
+    // 幽灵类型常量定义
+    private static final int GHOSTS = 4;      // 幽灵种类总数
+    private static final int BLINKY = 0;      // 红色幽灵Blinky
+    private static final int INKY = 1;        // 青色幽灵Inky
+    private static final int PINKY = 2;       // 粉色幽灵Pinky
+    private static final int CLYDE = 3;       // 橙色幽灵Clyde
 
     /**
-     * The default value of a pellet.
+     * 单个豆子的默认分数值。
      */
     private static final int PELLET_VALUE = 10;
 
     /**
-     * The sprite store that provides sprites for units.
+     * 精灵资源库，提供单位（幽灵、豆子）的贴图。
      */
     private final PacManSprites sprites;
 
     /**
-     * Used to cycle through the various ghost types.
+     * 幽灵类型循环索引，用于按顺序创建不同种类的幽灵。
      */
     private int ghostIndex;
 
     /**
-     * The factory providing ghosts.
+     * 幽灵工厂，用于创建特定类型的幽灵。
      */
     private final GhostFactory ghostFact;
 
     /**
-     * Creates a new level factory.
+     * 构造关卡工厂实例。
      *
-     * @param spriteStore
-     *            The sprite store providing the sprites for units.
-     * @param ghostFactory
-     *            The factory providing ghosts.
+     * @param spriteStore  提供单位贴图的精灵库
+     * @param ghostFactory 幽灵工厂，用于创建具体幽灵类型
      */
     public LevelFactory(PacManSprites spriteStore, GhostFactory ghostFactory) {
         this.sprites = spriteStore;
-        this.ghostIndex = -1;
+        this.ghostIndex = -1; // 初始化为-1，首次调用createGhost()后变为0
         this.ghostFact = ghostFactory;
     }
 
     /**
-     * Creates a new level from the provided data.
+     * 创建游戏关卡实例。
      *
-     * @param board
-     *            The board with all ghosts and pellets occupying their squares.
-     * @param ghosts
-     *            A list of all ghosts on the board.
-     * @param startPositions
-     *            A list of squares from which players may start the game.
-     * @return A new level for the board.
+     * @param board          关卡地图，包含地形和单位位置
+     * @param ghosts         关卡中的幽灵列表
+     * @param startPositions 玩家起始位置列表
+     * @return 配置完成的关卡对象，使用默认玩家碰撞处理器
      */
     public Level createLevel(Board board, List<Ghost> ghosts,
                              List<Square> startPositions) {
-
-        // We'll adopt the simple collision map for now.
+        // 使用默认的玩家碰撞处理器（处理玩家与幽灵、豆子的交互）
         CollisionMap collisionMap = new PlayerCollisions();
-
         return new Level(board, ghosts, startPositions, collisionMap);
     }
 
     /**
-     * Creates a new ghost.
+     * 创建新幽灵实例，按顺序循环生成四种经典幽灵。
+     * 顺序：Blinky -> Inky -> Pinky -> Clyde -> Blinky...
      *
-     * @return The new ghost.
+     * @return 新幽灵实例
      */
     Ghost createGhost() {
-        ghostIndex++;
-        ghostIndex %= GHOSTS;
+        ghostIndex = (ghostIndex + 1) % GHOSTS; // 循环索引0-3
         switch (ghostIndex) {
             case BLINKY:
-                return ghostFact.createBlinky();
+                return ghostFact.createBlinky();  // 红色幽灵
             case INKY:
-                return ghostFact.createInky();
+                return ghostFact.createInky();    // 青色幽灵
             case PINKY:
-                return ghostFact.createPinky();
+                return ghostFact.createPinky();   // 粉色幽灵
             case CLYDE:
-                return ghostFact.createClyde();
-            default:
+                return ghostFact.createClyde();   // 橙色幽灵
+            default: // 理论上不会执行，防御性代码
                 return new RandomGhost(sprites.getGhostSprite(GhostColor.RED));
         }
     }
 
     /**
-     * Creates a new pellet.
+     * 创建新豆子实例。
      *
-     * @return The new pellet.
+     * @return 豆子对象，包含分数值和贴图
      */
     public Pellet createPellet() {
         return new Pellet(PELLET_VALUE, sprites.getPelletSprite());
     }
 
+    //------------------------ 内部类 ------------------------
+
     /**
-     * Implementation of an NPC that wanders around randomly.
-     *
-     * @author Jeroen Roosen
+     * 随机移动的幽灵实现（备用方案，当GhostFactory未配置时使用）。
+     * 移动间隔固定为175ms，无特定AI逻辑。
      */
     private static final class RandomGhost extends Ghost {
+        private static final long DELAY = 175L; // 移动间隔（毫秒）
 
         /**
-         * The suggested delay between moves.
-         */
-        private static final long DELAY = 175L;
-
-        /**
-         * Creates a new random ghost.
+         * 构造随机移动幽灵。
          *
-         * @param ghostSprite
-         *            The sprite for the ghost.
+         * @param ghostSprite 幽灵各方向的贴图
          */
         RandomGhost(Map<Direction, Sprite> ghostSprite) {
-            super(ghostSprite, (int) DELAY, 0);
+            super(ghostSprite, (int) DELAY, 0); // 延迟转换为int
         }
 
+        /**
+         * AI移动逻辑：返回空表示随机移动。
+         */
         @Override
         public Optional<Direction> nextAiMove() {
-            return Optional.empty();
+            return Optional.empty(); // 由父类处理随机移动
         }
     }
 }

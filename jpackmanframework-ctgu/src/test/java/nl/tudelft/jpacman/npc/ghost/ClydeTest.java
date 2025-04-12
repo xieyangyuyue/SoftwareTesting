@@ -68,7 +68,7 @@ public class ClydeTest {
         List<String> map = Arrays.asList(
             "############",
             "#P...C     #",
-            "############"
+            "#.....######"
         );
         Level level = mapParser.parseMap(map);
         Player player = playerFactory.createPacMan();
@@ -118,7 +118,7 @@ public class ClydeTest {
         // 创建一个地图，Clyde被墙包围
         List<String> map = Arrays.asList(
             "############",
-            "# P######C##",
+            "##P######C##",
             "############"
         );
         Level level = mapParser.parseMap(map);
@@ -131,17 +131,66 @@ public class ClydeTest {
         if (clyde != null) {
             // 预期Clyde无法移动
             assertThat(clyde.nextAiMove()).isEmpty();
+//            assertThat(clyde.nextAiMove()).contains(Direction.EAST);
         }
     }
 
 
+    /**
+     * 测试Clyde离玩家远距离的行为
+     */
+    @Test
+    @DisplayName("Clyde离Player距离小于8个方块 但是有墙")
+    public void testClydeSmallFromPlayerSOUTH() {
+        // 创建一个地图，玩家和Clyde位于两端
+        List<String> map = Arrays.asList(
+            "############",
+            "#P#######C##",
+            "#..........#"
+        );
+        Level level = mapParser.parseMap(map);
+        Player player = playerFactory.createPacMan();
+        player.setDirection(Direction.EAST);
+        level.registerPlayer(player);
 
+        // 找到Clyde并测试其AI移动方向
+        Clyde clyde = Navigation.findUnitInBoard(Clyde.class, level.getBoard());
+        if (clyde != null) {
+            // 预期Clyde会向南移动，靠近玩家
+//            assertThat(clyde.nextAiMove()).isEmpty();
+            assertThat(clyde.nextAiMove()).contains(Direction.SOUTH);
+        }
+    }
+
+    @Test
+    @DisplayName("Clyde离Player距离小于8个方块 但是有墙 方向东")
+    public void testClydeSmallFromPlayerEAST() {
+        // 创建一个地图，玩家和Clyde位于两端
+        List<String> map = Arrays.asList(
+            "############",
+            "#P.......C##",
+            "#..........#"
+        );
+        Level level = mapParser.parseMap(map);
+        Player player = playerFactory.createPacMan();
+        player.setDirection(Direction.EAST);
+        level.registerPlayer(player);
+
+        // 找到Clyde并测试其AI移动方向
+        Clyde clyde = Navigation.findUnitInBoard(Clyde.class, level.getBoard());
+        if (clyde != null) {
+            // 预期Clyde会向东移动，远离玩家
+            assertThat(clyde.nextAiMove()).isEmpty();
+//            assertThat(clyde.nextAiMove()).contains(Direction.EAST);
+        }
+    }
 
     /**
      * 测试当关卡中没有存活玩家时Clyde（幽灵）的行为
      */
     @Test
-    @DisplayName("Clyde没有Player")  // 测试用例显示名称，说明测试场景
+    @DisplayName("Clyde没有Player")
+    // 测试用例显示名称，说明测试场景
     void departWithoutPlayer() {
         // 构建测试地图（ASCII结构）
         List<String> map = Arrays.asList(

@@ -1,46 +1,50 @@
 package nl.tudelft.jpacman.level;
 
-import java.util.Map;
-
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.sprite.AnimatedSprite;
 import nl.tudelft.jpacman.sprite.Sprite;
 
+import java.util.Map;
+
 /**
- * A player operated unit in our game.
+ * 表示游戏中由玩家控制的角色。
+ * <p>
+ * 玩家具有得分、方向显示、生死状态等功能。根据移动方向显示不同的图像，
+ * 并在死亡时显示动画精灵。
  *
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
+ * @since 1.0
  */
 public class Player extends Unit {
 
     /**
-     * The amount of points accumulated by this player.
+     * 玩家的得分，初始值为0。
      */
     private int score;
 
     /**
-     * The animations for every direction.
+     * 方向到精灵的映射，用于根据移动方向显示不同的图像。
      */
     private final Map<Direction, Sprite> sprites;
 
     /**
-     * The animation that is to be played when Pac-Man dies.
+     * 玩家死亡时显示的动画精灵。
      */
     private final AnimatedSprite deathSprite;
 
     /**
-     * <code>true</code> iff this player is alive.
+     * 玩家是否存活。
      */
     private boolean alive;
 
     /**
-     * Creates a new player with a score of 0 points.
+     * 创建一个新的玩家实例。
+     * <p>
+     * 初始化得分为0，存活状态为{@code true}，并将死亡动画精灵的动画设置为不播放。
      *
-     * @param spriteMap
-     *            A map containing a sprite for this player for every direction.
-     * @param deathAnimation
-     *            The sprite to be shown when this player dies.
+     * @param spriteMap      方向到精灵的映射，不能为空。
+     * @param deathAnimation 玩家死亡时显示的动画精灵，不能为空。
      */
     protected Player(Map<Direction, Sprite> spriteMap, AnimatedSprite deathAnimation) {
         this.score = 0;
@@ -51,19 +55,21 @@ public class Player extends Unit {
     }
 
     /**
-     * Returns whether this player is alive or not.
+     * 返回玩家是否存活。
      *
-     * @return <code>true</code> iff the player is alive.
+     * @return {@code true} 表示存活，{@code false} 表示死亡。
      */
     public boolean isAlive() {
         return alive;
     }
 
     /**
-     * Sets whether this player is alive or not.
+     * 设置玩家的存活状态。
+     * <p>
+     * 如果存活状态为{@code true}，停止死亡动画；
+     * 如果存活状态为{@code false}，重新启动死亡动画。
      *
-     * @param isAlive
-     *            <code>true</code> iff this player is alive.
+     * @param isAlive {@code true} 表示存活，{@code false} 表示死亡。
      */
     public void setAlive(boolean isAlive) {
         if (isAlive) {
@@ -76,9 +82,9 @@ public class Player extends Unit {
     }
 
     /**
-     * Returns the amount of points accumulated by this player.
+     * 返回玩家的当前得分。
      *
-     * @return The amount of points accumulated by this player.
+     * @return 玩家的得分，初始值为0。
      */
     public int getScore() {
         return score;
@@ -93,11 +99,9 @@ public class Player extends Unit {
     }
 
     /**
-     * Adds points to the score of this player.
+     * 将指定的分数加到玩家的得分中。
      *
-     * @param points
-     *            The amount of points to add to the points this player already
-     *            has.
+     * @param points 要增加的分数，必须为正整数。
      */
     public void addPoints(int points) {
         score += points;

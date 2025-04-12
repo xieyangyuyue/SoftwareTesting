@@ -16,9 +16,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * 优化后的Inky AI逻辑测试类。
- */
+
 public class InkyTest {
 
     private static final PacManSprites SPRITES = new PacManSprites();
@@ -35,7 +33,7 @@ public class InkyTest {
     }
 
     /**
-     * 注册玩家到关卡并设置方向。
+     * 注册Player到关卡并设置方向。
      */
     private void registerPlayer(Level level, Direction direction) {
         Player player = playerFactory.createPacMan();
@@ -51,7 +49,7 @@ public class InkyTest {
     }
 
     @Test
-    @DisplayName("当Inky、Blink和玩家在同一直线时，Inky应朝玩家方向移动")
+    @DisplayName("当Inky、Blink和Player在同一直线时，Inky应朝Player方向移动")
     void shouldMoveTowardsPlayerWhenAlignedWithBlinky() {
         Level level = parseMap(Arrays.asList(
             "#####################",
@@ -67,7 +65,7 @@ public class InkyTest {
     }
 
     @Test
-    @DisplayName("当玩家前方路径被阻挡时，Inky向Blinky移动")
+    @DisplayName("当Player前方路径被阻挡时，Inky向Blinky移动")
     void shouldMoveWhenPathIsBlocked() {
         Level level = parseMap(Arrays.asList(
             "#####################",
@@ -100,14 +98,14 @@ public class InkyTest {
     }
 
     @Test
-    @DisplayName("当玩家不存在时，Inky无目标点")
+    @DisplayName("当Player不存在时，Inky无目标点")
     void shouldNotMoveWithoutPlayer() {
         Level level = parseMap(Arrays.asList(
             "#############",
             "#    B    I #",
             "#############"
         ));
-        // 不注册玩家
+        // 不注册Player
         Inky inky = Navigation.findUnitInBoard(Inky.class, level.getBoard());
 
 
@@ -117,7 +115,7 @@ public class InkyTest {
     }
 
     @Test
-    @DisplayName("当玩家面朝北方时，Inky的目标点计算包含经典偏移")
+    @DisplayName("当Player面朝北方时，Inky的目标点计算包含经典偏移")
     void shouldCalculateTargetWithOffsetWhenPlayerFacesNorth() {
         Level level = parseMap(Arrays.asList(
             "######################",
@@ -136,7 +134,7 @@ public class InkyTest {
     }
 
     @Test
-    @DisplayName("当Blinky远离玩家时，Inky朝延长路径方向移动")
+    @DisplayName("当Blinky远离Player时，Inky朝延长路径方向移动")
     void shouldMoveToExtendedPathWhenBlinkyIsDistant() {
         Level level = parseMap(Arrays.asList(
             "######################",
@@ -147,7 +145,6 @@ public class InkyTest {
         ));
         registerPlayer(level, Direction.EAST);
         Inky inky = Navigation.findUnitInBoard(Inky.class, level.getBoard());
-
 
         if (inky != null) {
             assertThat(inky.nextAiMove()).contains(Direction.SOUTH);

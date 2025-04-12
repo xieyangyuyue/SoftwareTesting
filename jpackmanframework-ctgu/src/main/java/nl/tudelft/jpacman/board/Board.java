@@ -31,6 +31,7 @@ public class Board {
 
     /**
      * 棋盘不变式校验：确保所有方块非空。
+     *
      * @return 如果任意方块为null返回false，否则返回true
      */
     protected final boolean invariant() {
@@ -46,6 +47,7 @@ public class Board {
 
     /**
      * 获取棋盘列数（宽度）。
+     *
      * @return 棋盘列数，即二维数组第一维长度
      */
     public int getWidth() {
@@ -55,6 +57,7 @@ public class Board {
     /**
      * 获取棋盘行数（高度）。
      * 注意：假设棋盘为矩形结构，取第一列的长度作为行数。
+     *
      * @return 棋盘行数，即二维数组第二维长度
      */
     public int getHeight() {
