@@ -15,7 +15,6 @@
     <bytecodeTargetLevel>
       <module name="api" target="17" />
       <module name="assignmentone" target="1.8" />
-      <module name="jpacman-framework" target="17" />
       <module name="LinkedList" target="17" />
     </bytecodeTargetLevel>
   </component>

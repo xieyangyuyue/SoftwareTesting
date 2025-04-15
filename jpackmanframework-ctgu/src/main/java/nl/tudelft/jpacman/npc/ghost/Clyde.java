@@ -7,10 +7,7 @@ import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.npc.Ghost;
 import nl.tudelft.jpacman.sprite.Sprite;
 
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 经典Pac-Man幽灵Clyde（别名Pokey）的实现。
@@ -104,6 +101,37 @@ public class Clyde extends Ghost {
 //
 //        return Optional.empty(); // 无有效路径
 //    }
+   /* @Override
+    public Optional<Direction> nextAiMove() {
+        assert hasSquare();
+
+        Unit nearest = Navigation.findNearest(Player.class, getSquare());
+        if (nearest == null) {
+            return Optional.empty();
+        }
+
+        assert nearest.hasSquare();
+        Square target = nearest.getSquare();
+        List<Direction> path = Navigation.shortestPath(getSquare(), target, this);
+
+        if (path != null && !path.isEmpty()) {
+            Direction direction = path.get(0);
+
+            if (path.size() <= SHYNESS) {
+                // 检查反方向是否可行
+                Direction escapeDir = OPPOSITES.get(direction);
+                Square nextSquare = getSquare().getSquareAt(escapeDir);
+                if (nextSquare != null && nextSquare.isAccessibleTo(this)) {
+                    return Optional.of(escapeDir);
+                } else {
+                    return Optional.empty();
+                }
+            } else {
+                return Optional.of(direction);
+            }
+        }
+        return Optional.empty();
+    }*/
     @Override
     public Optional<Direction> nextAiMove() {
         assert hasSquare();
@@ -127,6 +155,12 @@ public class Clyde extends Ghost {
                 if (nextSquare != null && nextSquare.isAccessibleTo(this)) {
                     return Optional.of(escapeDir);
                 } else {
+                    for (Direction dir : Direction.values()) {
+                        Square next = getSquare().getSquareAt(dir);
+                        if (next != null && next.isAccessibleTo(this)) {
+                            return Optional.of(dir);
+                        }
+                    }
                     return Optional.empty();
                 }
             } else {

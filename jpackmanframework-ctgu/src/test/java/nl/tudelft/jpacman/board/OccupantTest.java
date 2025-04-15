@@ -2,8 +2,6 @@ package nl.tudelft.jpacman.board;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Jeroen Roosen
  */
 class OccupantTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OccupantTest.class);
+
 
     /**
      * 被测试的 Unit 实例（可能为 Pacman 或幽灵的测试实现）。
@@ -36,9 +34,7 @@ class OccupantTest {
      */
     @Test
     void noStartSquare() {
-        LOGGER.debug("unit isNotNull :{}", unit != null);
         assertThat(unit).isNotNull();       // 非空检查
-        LOGGER.debug("unit hasSquare :{}", unit.hasSquare());
         assertThat(unit.hasSquare()).isFalse(); // 初始未占据任何方块
     }
 
@@ -52,12 +48,10 @@ class OccupantTest {
         Square target = new BasicSquare(); // 基础 Square 实现
         unit.occupy(target);
 
-        LOGGER.debug("unit.getSquare: {}", unit.getSquare().equals(target));
 
         // 验证 Unit 的当前方块是同一个实例
         assertThat(unit.getSquare()).isSameAs(target);
 
-        LOGGER.debug("target.getOccupants: {}", target.getOccupants().contains(unit));
 
         // 验证方块的占用者列表包含该 Unit 实例
         assertThat(target.getOccupants()).contains(unit);

@@ -179,9 +179,9 @@ public class ClydeTest {
         // 找到Clyde并测试其AI移动方向
         Clyde clyde = Navigation.findUnitInBoard(Clyde.class, level.getBoard());
         if (clyde != null) {
-            // 预期Clyde会向东移动，远离玩家
-            assertThat(clyde.nextAiMove()).isEmpty();
-//            assertThat(clyde.nextAiMove()).contains(Direction.EAST);
+            // 预期Clyde会向南移动，远离玩家
+//            assertThat(clyde.nextAiMove()).isEmpty();
+            assertThat(clyde.nextAiMove()).contains(Direction.SOUTH);
         }
     }
 

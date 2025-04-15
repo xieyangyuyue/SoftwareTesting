@@ -62,7 +62,12 @@ public class MapParser {
     public Level parseMap(char[][] map) {
         // 验证地图尺寸
         int width = map.length;
-        int height = map[0].length;
+        int height;
+        try {
+            height = map[0].length;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ArrayIndexOutOfBoundsException("地图文本不能为null");
+        }
 
         // 初始化游戏元素存储
         Square[][] grid = new Square[width][height];
@@ -111,33 +116,37 @@ public class MapParser {
     protected void addSquare(Square[][] grid, List<Ghost> ghosts,
                             List<Square> startPositions, int x, int y, char c) {
         switch (c) {
-            case ' ' ->  // 空地
+            case ' ':  // 空地
                 grid[x][y] = boardCreator.createGround();
-            
-            case '#' ->  // 墙壁
+                break;
+
+            case '#':  // 墙壁
                 grid[x][y] = boardCreator.createWall();
-            
-            case '.' -> {  // 豆子
+                break;
+
+            case '.': {  // 豆子
                 Square pelletSquare = boardCreator.createGround();
                 grid[x][y] = pelletSquare;
-                // 在方块上放置豆子
                 levelCreator.createPellet().occupy(pelletSquare);
+                break;
             }
-            
-            case 'G' -> {  // 幽灵
+
+            case 'G': {  // 幽灵
                 Ghost ghost = levelCreator.createGhost();
                 Square ghostSquare = makeGhostSquare(ghosts, ghost);
                 grid[x][y] = ghostSquare;
+                break;
             }
-            
-            case 'P' -> {  // 玩家起始位置
+
+            case 'P': {  // 玩家起始位置
                 Square playerSquare = boardCreator.createGround();
                 grid[x][y] = playerSquare;
                 startPositions.add(playerSquare);
+                break;
             }
-            
-            default ->  // 无效字符处理
-                throw new PacmanConfigurationException("非法字符位于 " 
+
+            default:  // 无效字符处理
+                throw new PacmanConfigurationException("非法字符位于 "
                     + x + "," + y + ": " + c);
         }
     }

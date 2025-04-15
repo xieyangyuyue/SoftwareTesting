@@ -1,8 +1,7 @@
 package nl.tudelft.jpacman.board;
 
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,12 +15,11 @@ public class DirectionTest {
     /**
      * Do we get the correct delta when moving north?
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(DirectionTest.class);
+
 
     @Test
     void testNorth() {
         Direction north = Direction.NORTH;
-        LOGGER.debug("north getDeltaX:{},north getDeltaY :{}", north.getDeltaX(), north.getDeltaY());
         assertThat(north.getDeltaX()).isEqualTo(0);
         assertThat(north.getDeltaY()).isEqualTo(-1);
     }

@@ -1,0 +1,216 @@
+package nl.tudelft.jpacman.level;
+
+import nl.tudelft.jpacman.PacmanConfigurationException;
+import nl.tudelft.jpacman.board.Board;
+import nl.tudelft.jpacman.board.BoardFactory;
+import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.npc.Ghost;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
+
+@DisplayName("地图解析器单元测试")
+public class MapParserTest {
+
+    private MapParser mapParser;
+
+    @Mock
+    private LevelFactory levelFactory;
+
+    @Mock
+    private BoardFactory boardFactory;
+
+    @Mock
+    private Board mockBoard;
+
+    @Mock
+    private Level mockLevel;
+
+    @BeforeEach
+    @DisplayName("初始化测试环境")
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+        mapParser = new MapParser(levelFactory, boardFactory);
+
+        Square wall = mock(Square.class);
+        Square ground = mock(Square.class);
+        Ghost ghost = mock(Ghost.class);
+
+        when(boardFactory.createWall()).thenReturn(wall);
+        when(boardFactory.createGround()).thenReturn(ground);
+        when(levelFactory.createGhost()).thenReturn(ghost);
+        when(levelFactory.createPellet()).thenReturn(mock(Pellet.class));
+        when(boardFactory.createBoard(any())).thenReturn(mockBoard);
+        when(levelFactory.createLevel(any(), any(), any())).thenReturn(mockLevel);
+
+        doNothing().when(ghost).occupy(any());
+    }
+
+    @Test
+    @DisplayName("解析有效地图 - 正确统计所有元素")
+    void testParseMapSuccess() {
+        List<String> map = Arrays.asList(
+            "# #.#",
+            "#PGG ",
+            "##. #"
+        );
+        mapParser.parseMap(map);
+
+        verify(boardFactory, times(7)).createWall();
+        verify(boardFactory, times(8)).createGround();
+        verify(levelFactory, times(2)).createGhost();
+        verify(levelFactory, times(2)).createPellet();
+
+        ArgumentCaptor<List<Ghost>> ghostCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<Square>> startCaptor = ArgumentCaptor.forClass(List.class);
+        verify(levelFactory).createLevel(eq(mockBoard), ghostCaptor.capture(), startCaptor.capture());
+
+        assertEquals(2, ghostCaptor.getValue().size());
+        assertEquals(1, startCaptor.getValue().size());
+    }
+
+    @ParameterizedTest
+    @ValueSource(chars = {'X', '\t', '0', '@'})
+    @DisplayName("解析无效字符 - 抛出PacmanConfigurationException")
+    void testInvalidCharacters(char invalidChar) {
+        char[][] map = {{invalidChar}};
+        assertThrows(PacmanConfigurationException.class, () -> mapParser.parseMap(map));
+    }
+
+    @Test
+    @DisplayName("解析空地图 - 抛出异常")
+    void testEmptyMap() {
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> mapParser.parseMap(new char[0][]));
+    }
+
+    @Test
+    @DisplayName("解析单行地图 - 验证Board尺寸")
+    void testSingleRowMap() {
+        char[][] map = {{'#', 'P', ' '}};
+        mapParser.parseMap(map);
+        verify(boardFactory).createBoard(argThat(grid -> grid.length == 1 && grid[0].length == 3));
+    }
+
+    @Test
+    @DisplayName("解析多玩家位置 - 收集所有起始点")
+    void testMultiplePlayers() {
+        char[][] map = {{'P'}, {'P'}};
+        mapParser.parseMap(map);
+
+        ArgumentCaptor<List<Square>> startCaptor = ArgumentCaptor.forClass(List.class);
+        verify(levelFactory).createLevel(any(), any(), startCaptor.capture());
+        assertEquals(2, startCaptor.getValue().size());
+    }
+
+    @Test
+    @DisplayName("解析字符串列表 - 行列转换正确")
+    void testParseFromStringList() {
+        List<String> lines = Arrays.asList("#####", "#P.G#", "#####");
+        mapParser.parseMap(lines);
+
+        verify(boardFactory).createBoard(argThat(grid ->
+            grid[1][1] != null && grid[3][1] != null
+        ));
+    }
+
+    @Test
+    @DisplayName("解析行长度不一致 - 抛出异常")
+    void testInconsistentRowLength() {
+        List<String> lines = Arrays.asList("####", "##");
+        assertThrows(PacmanConfigurationException.class, () -> mapParser.parseMap(lines));
+    }
+
+    @Test
+    @DisplayName("解析null输入 - 抛出NPE")
+    void testNullMap() {
+        assertThrows(NullPointerException.class, () -> mapParser.parseMap((char[][]) null));
+    }
+
+    @Test
+    @DisplayName("解析豆子 - 验证占据方法调用")
+    void testPelletOccupation() {
+        char[][] map = {{'.'}};
+        Pellet pellet = mock(Pellet.class);
+        when(levelFactory.createPellet()).thenReturn(pellet);
+
+        mapParser.parseMap(map);
+        verify(pellet).occupy(any(Square.class));
+    }
+
+    @Test
+    @DisplayName("解析幽灵 - 验证占据方法调用")
+    void testGhostOccupation() {
+        Ghost ghost = mock(Ghost.class);
+        when(levelFactory.createGhost()).thenReturn(ghost);
+
+        char[][] map = {{'G'}};
+        mapParser.parseMap(map);
+
+        verify(ghost).occupy(any(Square.class));
+    }
+
+    @Test
+    @DisplayName("解析最小地图 - 创建成功")
+    void testMinimalValidMap() {
+        char[][] map = {{'#'}};
+        assertNotNull(mapParser.parseMap(map));
+        verify(boardFactory).createWall();
+    }
+
+    @Test
+    @DisplayName("解析空格字符 - 创建地面")
+    void testSpaceCharacter() {
+        char[][] map = {{' '}};
+        mapParser.parseMap(map);
+        verify(boardFactory).createGround();
+        verify(levelFactory, never()).createPellet();
+    }
+
+    @Test
+    @DisplayName("解析null列表 - 抛出异常")
+    void testNullListMap() {
+        assertThrows(PacmanConfigurationException.class, () -> mapParser.parseMap((List<String>) null));
+    }
+
+    @Test
+    @DisplayName("解析输入流 - 正确转换")
+    void testParseInputStream() throws IOException {
+        String input = "###\n#P#\n###";
+        InputStream stream = new ByteArrayInputStream(input.getBytes());
+        mapParser.parseMap(stream);
+
+        verify(boardFactory).createBoard(argThat(grid ->
+            grid.length == 3 && grid[0][1] != null // 第二行中间的P
+        ));
+    }
+
+    @Test
+    @DisplayName("解析不存在的资源文件 - 抛出异常")
+    void testNonExistingResource() {
+        assertThrows(PacmanConfigurationException.class, () -> mapParser.parseMap("/nonexistent.txt"));
+    }
+
+    @Test
+    @DisplayName("解析空行地图 - 抛出异常")
+    void testEmptyLineMap() {
+        List<String> lines = Collections.singletonList("");
+        assertThrows(PacmanConfigurationException.class, () -> mapParser.parseMap(lines));
+    }
+}
